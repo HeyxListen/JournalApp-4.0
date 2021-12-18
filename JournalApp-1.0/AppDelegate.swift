@@ -2,15 +2,23 @@
 //  AppDelegate.swift
 //  JournalApp-1.0
 //
-//  Created by csuftitan on 12/1/21.
+//  Created by STEPHENCOFFARO on 12/1/21.
 //
 
 import UIKit
-
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegate {
 
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        if viewController is ModularNavigationViewController {
+            if let newVC = tabBarController.storyboard?.instantiateViewController(withIdentifier: "AddEntry_vc") {
+                tabBarController.present(newVC, animated: true)
+                return false
+            } 
+        }
 
+        return true
+    }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.

@@ -2,7 +2,7 @@
 //  SceneDelegate.swift
 //  JournalApp-1.0
 //
-//  Created by csuftitan on 12/1/21.
+//  Created by STEPHENCOFFARO on 12/1/21.
 //
 
 import UIKit
