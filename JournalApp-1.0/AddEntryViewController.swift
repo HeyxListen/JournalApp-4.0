@@ -1,3 +1,5 @@
+// xcode: set sdk=iOS
+
 //
 //  AddEntryViewController.swift
 //  JournalApp-1.0
@@ -7,7 +9,7 @@
 
 import UIKit
 
-class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITextViewDelegate {
+class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITextViewDelegate, UIGestureRecognizerDelegate {
     
     
     
@@ -52,6 +54,12 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
     @IBOutlet var healthButton: UIButton!
     @IBOutlet var goalsButton: UIButton!
     @IBOutlet var submitEntryButton: UIButton!
+
+    private let entryScrollView = UIScrollView()
+    private lazy var moodSliderTapGestureRecognizer = UITapGestureRecognizer(
+        target: self,
+        action: #selector(selectMoodFromSliderTap(_:))
+    )
     
     //
     
@@ -64,7 +72,60 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         //self.tabBarController?.delegate = UIApplication.shared.delegate as? UITabBarControllerDelegate
         super.viewDidLoad()
         initialUIView()
+        configureKeyboardAwareEntryForm()
+        configureMoodSlider()
+        titleTextView.delegate = self
         entryTextView.delegate = self
+    }
+
+    private func configureMoodSlider() {
+        guard let slider = feelingSlider else { return }
+
+        slider.minimumValue = 1
+        slider.maximumValue = 5
+        slider.isContinuous = true
+        slider.addTarget(self, action: #selector(moodSliderValueChanged(_:)), for: .valueChanged)
+
+        moodSliderTapGestureRecognizer.cancelsTouchesInView = false
+        moodSliderTapGestureRecognizer.delegate = self
+        // The storyboard gives the slider and emoji row a shared container.
+        // Listening on that container makes both the track and emoji row tappable.
+        slider.superview?.addGestureRecognizer(moodSliderTapGestureRecognizer)
+    }
+
+    @objc private func moodSliderValueChanged(_ slider: UISlider) {
+        slider.value = min(max(round(slider.value), slider.minimumValue), slider.maximumValue)
+    }
+
+    @objc private func selectMoodFromSliderTap(_ gestureRecognizer: UITapGestureRecognizer) {
+        guard let slider = feelingSlider else { return }
+
+        let trackRect = slider.trackRect(forBounds: slider.bounds)
+        let minimumThumb = slider.thumbRect(
+            forBounds: slider.bounds,
+            trackRect: trackRect,
+            value: slider.minimumValue
+        )
+        let maximumThumb = slider.thumbRect(
+            forBounds: slider.bounds,
+            trackRect: trackRect,
+            value: slider.maximumValue
+        )
+        let usableWidth = maximumThumb.midX - minimumThumb.midX
+        guard usableWidth > 0 else { return }
+
+        let tappedX = gestureRecognizer.location(in: slider).x
+        let fraction = min(max((tappedX - minimumThumb.midX) / usableWidth, 0), 1)
+        let value = slider.minimumValue + Float(fraction) * (slider.maximumValue - slider.minimumValue)
+        slider.setValue(round(value), animated: true)
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        gestureRecognizer === moodSliderTapGestureRecognizer ||
+        otherGestureRecognizer === moodSliderTapGestureRecognizer
     }
     
     func initialUIView() {
@@ -82,8 +143,41 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         question2StackView.isHidden = true
         question2AStackView.isHidden = true
         question3StackView.isHidden = true
+        entryScrollView.isHidden = true
         question3NextButton.isEnabled = false
         question4StackView.isHidden = true
+    }
+
+    /// Moves the storyboard's entry form into a scroll view whose bottom follows
+    /// the keyboard, so the active text view and Next button remain reachable.
+    private func configureKeyboardAwareEntryForm() {
+        let oldConstraints = view.constraints.filter {
+            ($0.firstItem as? UIView) === question3StackView ||
+            ($0.secondItem as? UIView) === question3StackView
+        }
+        NSLayoutConstraint.deactivate(oldConstraints)
+        question3StackView.removeFromSuperview()
+
+        entryScrollView.translatesAutoresizingMaskIntoConstraints = false
+        entryScrollView.isHidden = true
+        entryScrollView.keyboardDismissMode = .interactive
+        entryScrollView.alwaysBounceVertical = true
+        view.addSubview(entryScrollView)
+        entryScrollView.addSubview(question3StackView)
+
+        NSLayoutConstraint.activate([
+            entryScrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 15),
+            entryScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -15),
+            entryScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            entryScrollView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+
+            question3StackView.leadingAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.leadingAnchor, constant: 15),
+            question3StackView.trailingAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.trailingAnchor, constant: -15),
+            question3StackView.topAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.topAnchor, constant: 10),
+            question3StackView.bottomAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.bottomAnchor, constant: -10),
+            question3StackView.widthAnchor.constraint(equalTo: entryScrollView.frameLayoutGuide.widthAnchor, constant: -30),
+            question3StackView.heightAnchor.constraint(equalToConstant: 672)
+        ])
     }
     
     
@@ -107,6 +201,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         case manualEntryButton:
             question2StackView.isHidden = true
             question3StackView.isHidden = false
+            entryScrollView.isHidden = false
             refreshPromptButton.isHidden = true
             entryType = "Manual"
             titleTextView.isEditable = true
@@ -114,6 +209,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             question2StackView.isHidden = true
             //question2AStackView.isHidden = false
             question3StackView.isHidden = false
+            entryScrollView.isHidden = false
             titleTextView.text = "PROMPT: \(prompts.randomElement()!.prompt)"
             refreshPromptButton.setTitle("Refresh Prompt", for: .normal)
             entryType = "Prompt"
@@ -122,6 +218,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             let selectedQuote = quotes.randomElement()!
             question2StackView.isHidden = true
             question3StackView.isHidden = false
+            entryScrollView.isHidden = false
             titleTextView.text = "QUOTE REFLECTION: \(selectedQuote.quote) - \(selectedQuote.author)"
             refreshPromptButton.setTitle("Refresh Quote", for: .normal)
             entryType = "Quote"
@@ -158,8 +255,10 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         default:
             question2StackView.isHidden = true
             question3StackView.isHidden = false
+            entryScrollView.isHidden = false
             refreshPromptButton.isHidden = true
         }
+        checkIfEntryIsPopulated()
     }
     
     @IBAction func goalChosen(_ sender: UIButton) {
@@ -177,6 +276,8 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         }
         question2AStackView.isHidden = true
         question3StackView.isHidden = false
+        entryScrollView.isHidden = false
+        checkIfEntryIsPopulated()
     }
     
     
@@ -193,6 +294,9 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
     }
     
     @IBAction func question3NextButton(_ sender: Any) {
+        titleTextView.resignFirstResponder()
+        entryTextView.resignFirstResponder()
+        entryScrollView.isHidden = true
         question3StackView.isHidden = true
         question4StackView.isHidden = false
         submitEntryButton.isEnabled = false
@@ -269,17 +373,14 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             }
         }
     
-    func checkIfEntryIsPopulated() {
-        
-    let titleText = titleTextView.text ?? ""
-    let entryText = entryTextView.text ?? ""
-       
-    question3NextButton.isEnabled = !titleText.isEmpty && !entryText.isEmpty
+    private func checkIfEntryIsPopulated() {
+        let hasTitle = !(titleTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasEntry = !(entryTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        question3NextButton.isEnabled = hasTitle && hasEntry
     }
     
-    func textViewDidChange(_ entryTextView: UITextView) {
+    func textViewDidChange(_ textView: UITextView) {
         checkIfEntryIsPopulated()
     }
        
 }
-
