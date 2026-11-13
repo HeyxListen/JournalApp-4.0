@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A0FC231276D5FF80022CA56 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A0FC230276D5FF80022CA56 /* LaunchScreen.storyboard */; };
+		7134E9C430A5844900920009 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7134E9C230A5844900920009 /* LaunchScreen.storyboard */; };
 		7A1D34362763D07900BB77E8 /* AddEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1D34352763D07900BB77E8 /* AddEntryViewController.swift */; };
 		7A1D34382763D24700BB77E8 /* ModularNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1D34372763D24700BB77E8 /* ModularNavigationViewController.swift */; };
 		7A4B6F8C276A75B100557D17 /* ThisUserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4B6F8B276A75B100557D17 /* ThisUserProfile.swift */; };
@@ -28,7 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7A0FC230276D5FF80022CA56 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		7134E9C330A5844900920009 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7A1D34352763D07900BB77E8 /* AddEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEntryViewController.swift; sourceTree = "<group>"; };
 		7A1D34372763D24700BB77E8 /* ModularNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModularNavigationViewController.swift; sourceTree = "<group>"; };
 		7A4B6F8B276A75B100557D17 /* ThisUserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisUserProfile.swift; sourceTree = "<group>"; };
@@ -80,8 +80,8 @@
 		7ABA7D0727580587000A16B8 /* JournalApp-1.0 */ = {
 			isa = PBXGroup;
 			children = (
+				7134E9C230A5844900920009 /* LaunchScreen.storyboard */,
 				7ABA7D1127580588000A16B8 /* Assets.xcassets */,
-				7A0FC230276D5FF80022CA56 /* LaunchScreen.storyboard */,
 				7ABA7D0E27580587000A16B8 /* Main.storyboard */,
 				7ABA7D0827580587000A16B8 /* AppDelegate.swift */,
 				7ABA7D0A27580587000A16B8 /* SceneDelegate.swift */,
@@ -160,7 +160,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A0FC231276D5FF80022CA56 /* LaunchScreen.storyboard in Resources */,
+				7134E9C430A5844900920009 /* LaunchScreen.storyboard in Resources */,
 				7ABA7D1227580588000A16B8 /* Assets.xcassets in Resources */,
 				7ABA7D1027580587000A16B8 /* Main.storyboard in Resources */,
 			);
@@ -194,6 +194,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		7134E9C230A5844900920009 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7134E9C330A5844900920009 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
 		7ABA7D0E27580587000A16B8 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -329,6 +337,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WAQ324JBB5;
 				INFOPLIST_FILE = "JournalApp-1.0/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -348,6 +357,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WAQ324JBB5;
 				INFOPLIST_FILE = "JournalApp-1.0/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
