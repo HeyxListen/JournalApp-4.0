@@ -39,6 +39,8 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         
     //Question3 Outlets
     @IBOutlet var question3StackView: UIStackView!
+    @IBOutlet var titleLabel: UILabel!
+    @IBOutlet var entryLabel: UILabel!
     @IBOutlet var titleTextView: UITextView!
     @IBOutlet var entryTextView: UITextView!
     @IBOutlet var question3NextButton: UIButton!
@@ -56,6 +58,10 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
     @IBOutlet var submitEntryButton: UIButton!
 
     private let entryScrollView = UIScrollView()
+    private let titleHintLabel = UILabel()
+    private var titleTextViewHeightConstraint: NSLayoutConstraint!
+    private var entryTextViewHeightConstraint: NSLayoutConstraint!
+    private var editableTitleBackgroundColor: UIColor?
     private lazy var moodSliderTapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(selectMoodFromSliderTap(_:))
@@ -74,8 +80,104 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         initialUIView()
         configureKeyboardAwareEntryForm()
         configureMoodSlider()
+        configureEntryTextViews()
         titleTextView.delegate = self
         entryTextView.delegate = self
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateEntryTextViewHeights()
+    }
+
+    private func configureEntryTextViews() {
+        editableTitleBackgroundColor = titleTextView.backgroundColor
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.adjustsFontForContentSizeCategory = true
+        entryLabel.font = .preferredFont(forTextStyle: .headline)
+        entryLabel.adjustsFontForContentSizeCategory = true
+        titleTextView.font = .preferredFont(forTextStyle: .body)
+        titleTextView.adjustsFontForContentSizeCategory = true
+        entryTextView.font = .preferredFont(forTextStyle: .body)
+        entryTextView.adjustsFontForContentSizeCategory = true
+
+        titleHintLabel.font = .preferredFont(forTextStyle: .subheadline)
+        titleHintLabel.adjustsFontForContentSizeCategory = true
+        titleHintLabel.textColor = .secondaryLabel
+        titleHintLabel.numberOfLines = 0
+        titleHintLabel.isHidden = true
+
+        if let titleStackView = titleTextView.superview as? UIStackView {
+            titleStackView.insertArrangedSubview(titleHintLabel, at: 1)
+        }
+
+        titleTextView.isScrollEnabled = false
+        entryTextView.isScrollEnabled = false
+
+        let storyboardHeightConstraints = titleTextView.constraints.filter {
+            $0.firstAttribute == .height
+        }
+        NSLayoutConstraint.deactivate(storyboardHeightConstraints)
+
+        titleTextViewHeightConstraint = titleTextView.heightAnchor.constraint(equalToConstant: 60)
+        entryTextViewHeightConstraint = entryTextView.heightAnchor.constraint(equalToConstant: 180)
+        NSLayoutConstraint.activate([titleTextViewHeightConstraint, entryTextViewHeightConstraint])
+
+        question3StackView.spacing = 20
+        updateEntryTextViewHeights()
+    }
+
+    private func updateEntryTextViewHeights() {
+        guard
+            titleTextViewHeightConstraint != nil,
+            entryTextViewHeightConstraint != nil,
+            titleTextView.bounds.width > 0,
+            entryTextView.bounds.width > 0
+        else {
+            return
+        }
+
+        updateHeight(
+            of: titleTextView,
+            constraint: titleTextViewHeightConstraint,
+            minimumHeight: 60,
+            maximumHeight: 180
+        )
+        updateHeight(
+            of: entryTextView,
+            constraint: entryTextViewHeightConstraint,
+            minimumHeight: 180,
+            maximumHeight: 360
+        )
+    }
+
+    private func updateHeight(
+        of textView: UITextView,
+        constraint: NSLayoutConstraint,
+        minimumHeight: CGFloat,
+        maximumHeight: CGFloat
+    ) {
+        let fittingSize = textView.sizeThatFits(
+            CGSize(width: textView.bounds.width, height: .greatestFiniteMagnitude)
+        )
+        let desiredHeight = max(minimumHeight, ceil(fittingSize.height))
+        let newHeight = min(desiredHeight, maximumHeight)
+        if abs(constraint.constant - newHeight) > 0.5 {
+            constraint.constant = newHeight
+        }
+        textView.isScrollEnabled = desiredHeight > maximumHeight
+    }
+
+    private func setTitlePresentation(title: String, hint: String?, editable: Bool) {
+        titleLabel.text = title
+        titleHintLabel.text = hint
+        titleHintLabel.isHidden = hint == nil
+        titleTextView.isEditable = editable
+        titleTextView.backgroundColor = editable
+            ? (editableTitleBackgroundColor ?? .secondarySystemBackground)
+            : .secondarySystemBackground
+        titleTextView.textColor = editable ? .label : .secondaryLabel
+        updateEntryTextViewHeights()
     }
 
     private func configureMoodSlider() {
@@ -175,8 +277,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             question3StackView.trailingAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.trailingAnchor, constant: -15),
             question3StackView.topAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.topAnchor, constant: 10),
             question3StackView.bottomAnchor.constraint(equalTo: entryScrollView.contentLayoutGuide.bottomAnchor, constant: -10),
-            question3StackView.widthAnchor.constraint(equalTo: entryScrollView.frameLayoutGuide.widthAnchor, constant: -30),
-            question3StackView.heightAnchor.constraint(equalToConstant: 672)
+            question3StackView.widthAnchor.constraint(equalTo: entryScrollView.frameLayoutGuide.widthAnchor, constant: -30)
         ])
     }
     
@@ -188,11 +289,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
     }
     
     func checkIfGoalsSetInProfile() -> Bool{
-        if (userProfile.goal1 == "" && userProfile.goal2 == "" && userProfile.goal3 == "") {
-            return false
-        } else {
-            return true
-        }
+        userProfile.goals.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
     
     @IBAction func question2NextButton(_ sender: UIButton) {
@@ -204,31 +301,47 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             entryScrollView.isHidden = false
             refreshPromptButton.isHidden = true
             entryType = "Manual"
-            titleTextView.isEditable = true
+            titleTextView.text = ""
+            entryTextView.text = ""
+            setTitlePresentation(title: "Title", hint: nil, editable: true)
         case promptButton:
             question2StackView.isHidden = true
             //question2AStackView.isHidden = false
             question3StackView.isHidden = false
             entryScrollView.isHidden = false
-            titleTextView.text = "PROMPT: \(prompts.randomElement()!.prompt)"
+            titleTextView.text = prompts.randomElement()!.prompt
+            entryTextView.text = ""
             refreshPromptButton.setTitle("Refresh Prompt", for: .normal)
             entryType = "Prompt"
-            titleTextView.isEditable = false
+            setTitlePresentation(
+                title: "Prompt",
+                hint: "Provided for you. Write your response in the Entry box below.",
+                editable: false
+            )
         case quoteReflectionButton:
             let selectedQuote = quotes.randomElement()!
             question2StackView.isHidden = true
             question3StackView.isHidden = false
             entryScrollView.isHidden = false
-            titleTextView.text = "QUOTE REFLECTION: \(selectedQuote.quote) - \(selectedQuote.author)"
+            titleTextView.text = "\(selectedQuote.quote) — \(selectedQuote.author)"
+            entryTextView.text = ""
             refreshPromptButton.setTitle("Refresh Quote", for: .normal)
             entryType = "Quote"
-            titleTextView.isEditable = false
+            setTitlePresentation(
+                title: "Quote Reflection",
+                hint: nil,
+                editable: false
+            )
         case goalObjectiveButton:
             question2StackView.isHidden = true
             question2AStackView.isHidden = false
             refreshPromptButton.isHidden = true
             entryType = "Goal"
-            titleTextView.isEditable = false
+            setTitlePresentation(
+                title: "Goal",
+                hint: "This is your selected goal. Write your check-in in the Entry box below.",
+                editable: false
+            )
             //Goal #1
             if (userProfile.goal1 == "") {
                 goal1Button.isEnabled = false
@@ -257,7 +370,9 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
             question3StackView.isHidden = false
             entryScrollView.isHidden = false
             refreshPromptButton.isHidden = true
+            setTitlePresentation(title: "Title", hint: nil, editable: true)
         }
+        updateEntryTextViewHeights()
         checkIfEntryIsPopulated()
     }
     
@@ -277,19 +392,25 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
         question2AStackView.isHidden = true
         question3StackView.isHidden = false
         entryScrollView.isHidden = false
+        setTitlePresentation(
+            title: "Goal",
+            hint: "This is your selected goal. Write your check-in in the Entry box below.",
+            editable: false
+        )
         checkIfEntryIsPopulated()
     }
     
     
     @IBAction func newPrompt(_ sender: Any) {
         if (entryType == "Prompt") {
-            titleTextView.text = "PROMPT: \(prompts.randomElement()!.prompt)"
+            titleTextView.text = prompts.randomElement()!.prompt
             entryTextView.text = ""
         } else {
             let selectQuote = quotes.randomElement()!
-            titleTextView.text = "QUOTE REFLECTION: \(selectQuote.quote) - \(selectQuote.author)"
+            titleTextView.text = "\(selectQuote.quote) — \(selectQuote.author)"
             entryTextView.text = ""
         }
+        updateEntryTextViewHeights()
         checkIfEntryIsPopulated()
     }
     
@@ -380,6 +501,7 @@ class AddEntryViewController: UIViewController, UITabBarControllerDelegate, UITe
     }
     
     func textViewDidChange(_ textView: UITextView) {
+        updateEntryTextViewHeights()
         checkIfEntryIsPopulated()
     }
        

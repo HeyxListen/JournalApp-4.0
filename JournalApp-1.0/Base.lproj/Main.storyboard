@@ -167,6 +167,8 @@
                         <outlet property="inspirationalQuoteSwitch" destination="I5x-S8-fk8" id="3ez-Sb-IPK"/>
                         <outlet property="morningReminderSwitch" destination="H4g-Ky-zYL" id="lj7-N2-Agy"/>
                         <outlet property="nameTextField" destination="tMp-Jm-a1J" id="Jyi-Cv-Dpg"/>
+                        <outlet property="profileFieldsStackView" destination="Evf-o7-PRF" id="7PQ-Vn-7dX"/>
+                        <outlet property="profileStackView" destination="VnA-3g-MZq" id="C8k-c3-5NG"/>
                         <outlet property="updateProfileButton" destination="22L-Yz-c1G" id="KXk-kR-Ykl"/>
                     </connections>
                 </viewController>
@@ -1212,6 +1214,7 @@
                     <connections>
                         <outlet property="cancelButton" destination="Pwd-tH-2qO" id="nee-uq-lv0"/>
                         <outlet property="doneButton" destination="prX-HT-yVs" id="agK-HR-QEz"/>
+                        <outlet property="entryLabel" destination="TaB-Xr-8RP" id="nK8-1B-aW2"/>
                         <outlet property="entryTextView" destination="Jjd-PM-eom" id="Lf5-2H-Aww"/>
                         <outlet property="feelingSlider" destination="a3U-6B-pcR" id="HSV-VB-Kck"/>
                         <outlet property="financeButton" destination="Lgx-da-bxd" id="W3D-t6-0SB"/>
@@ -1239,6 +1242,7 @@
                         <outlet property="relationshipButton" destination="plT-5D-gIs" id="nCO-hA-zuq"/>
                         <outlet property="schoolButton" destination="zzu-xj-OxD" id="XfO-8r-sDY"/>
                         <outlet property="submitEntryButton" destination="vfQ-kQ-FRW" id="NYt-eL-anc"/>
+                        <outlet property="titleLabel" destination="wq6-7f-DR2" id="uG2-bd-Tl8"/>
                         <outlet property="titleTextView" destination="xgy-IJ-2lf" id="bVp-ZZ-Ule"/>
                         <outlet property="workButton" destination="Pmh-ME-Rqi" id="6fz-o0-yqB"/>
                     </connections>

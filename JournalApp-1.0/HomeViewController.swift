@@ -61,13 +61,15 @@ class HomeViewController: UIViewController, UITabBarControllerDelegate {
         dynamicGrowthLabel.text = updateGrowthLabel(entries: entries)
         //Total Entries
         allTimeTotal.text = "\(entries.count)"
-        allTimeAvgEmotion.text = getEmoji(emojiValue: (checkAverageEmotionOfAllEntries(entries: entries)))
+        allTimeAvgEmotion.text = averageMoodDisplay(for: entries)
         //This Month Totals
-        thisMonthTotal.text = String(checkIfEntryInCurrentMonth(entries: entries))
-        thisMonthAvgEmotion.text = getEmoji(emojiValue: (checkAverageEmotionInCurrentMonth(entries: entries)))
+        let entriesThisMonth = entriesInCurrentMonth(entries)
+        thisMonthTotal.text = String(entriesThisMonth.count)
+        thisMonthAvgEmotion.text = averageMoodDisplay(for: entriesThisMonth)
         //7-Day Average Totals
-        sevenDayAverageTotal.text = String(checkEntriesIn7DayAvg(entries: entries))
-        sevenDayAvgEmotion.text = getEmoji(emojiValue: (checkAverageEmotionIn7Day(entries: entries)))
+        let entriesInLastSevenDays = entriesInLastSevenCalendarDays(entries)
+        sevenDayAverageTotal.text = String(entriesInLastSevenDays.count)
+        sevenDayAvgEmotion.text = averageMoodDisplay(for: entriesInLastSevenDays)
         
     }
     //
@@ -75,7 +77,7 @@ class HomeViewController: UIViewController, UITabBarControllerDelegate {
     
     //UPDATE FLOWER IMAGE & LABEL
     func updateFlower() {
-        let entriesThisMonth = checkIfEntryInCurrentMonth(entries: entries)
+        let entriesThisMonth = entriesInCurrentMonth(entries).count
         
         switch entriesThisMonth {
         case 0...1:
@@ -93,7 +95,7 @@ class HomeViewController: UIViewController, UITabBarControllerDelegate {
     }
     
     func updateGrowthLabel(entries: [JournalEntry]) -> String {
-        let numberOfEntries = checkIfEntryInCurrentMonth(entries: entries)
+        let numberOfEntries = entriesInCurrentMonth(entries).count
         var labelString: String = ""
         
         switch numberOfEntries {
@@ -109,117 +111,45 @@ class HomeViewController: UIViewController, UITabBarControllerDelegate {
         return labelString
     }
     
-    //ALL TIME
-    func checkAverageEmotionOfAllEntries(entries: [JournalEntry]) -> Int {
-        var totalEntries: Int = 0
-        var sumOfEntryEmotionsInTotal: Int = 0
-        var averageEmotionScore: Int = 0
-        for entry in entries {
-            totalEntries += 1
-            sumOfEntryEmotionsInTotal += entry.moodNumber
-            }
-        if (totalEntries != 0) {
-            averageEmotionScore = Int((sumOfEntryEmotionsInTotal/totalEntries))
-        } else {
-            averageEmotionScore = 1
-        }
-        
-        return averageEmotionScore
-    }
-    
-    //CURRENT MONTH
-    func checkIfEntryInCurrentMonth(entries: [JournalEntry]) -> Int {
-        var numberOfEntriesInMonth: Int = 0
-        let now = Date()
-        let dateFormatter = DateFormatter()
-        //YEAR INT
-        dateFormatter.dateFormat = "yyyy"
-        let yearString = dateFormatter.string(from: now)
-        let thisYearInt = Int(yearString) ?? 2222
-        //MONTH NUM INT
-        dateFormatter.dateFormat = "MM"
-        let monthString = dateFormatter.string(from: now)
-        let thisMonthInt = Int(monthString) ?? 0
-        
-        for entry in entries {
-            if (entry.loggedTime.monthNumber ==  thisMonthInt) && (entry.loggedTime.year ==  thisYearInt) {
-                numberOfEntriesInMonth += 1
-            }
-        }
-        return numberOfEntriesInMonth
-    }
-    
-    func checkAverageEmotionInCurrentMonth(entries: [JournalEntry]) -> Int {
-        var numberOfEntriesInMonth: Int = 0
-        var sumOfEntryEmotionsInMonth: Int = 0
-        var averageEmotionScore: Int
-        let now = Date()
-        let dateFormatter = DateFormatter()
-        //YEAR INT
-        dateFormatter.dateFormat = "yyyy"
-        let yearString = dateFormatter.string(from: now)
-        let thisYearInt = Int(yearString) ?? 2222
-        //MONTH NUM INT
-        dateFormatter.dateFormat = "MM"
-        let monthString = dateFormatter.string(from: now)
-        let thisMonthInt = Int(monthString) ?? 0
-        
-        for entry in entries {
-            if (entry.loggedTime.monthNumber ==  thisMonthInt) && (entry.loggedTime.year ==  thisYearInt) {
-                numberOfEntriesInMonth += 1
-                sumOfEntryEmotionsInMonth += entry.moodNumber
-            }
-        }
-        if (numberOfEntriesInMonth != 0) {
-            averageEmotionScore = Int((sumOfEntryEmotionsInMonth/numberOfEntriesInMonth))
-        } else {
-            averageEmotionScore = 1
-        }
-        return averageEmotionScore
-    }
-    
-    //7-DAY AVERAGE
-    func checkEntriesIn7DayAvg(entries: [JournalEntry]) -> Int {
-        var numberOfEntriesIn7Days: Int = 0
-        let now = Date()
-        let dateFormatter = DateFormatter()
-        //DATE OF YEAR INT
-        dateFormatter.dateFormat = "DD"
-        let dayString = dateFormatter.string(from: now)
-        let thisDayInt = Int(dayString) ?? 0
-            
-        for entry in entries {
-            if (entry.loggedTime.dayInYear >= (thisDayInt - 7)) {
-                numberOfEntriesIn7Days += 1
-            } else { }
-        }
-        return numberOfEntriesIn7Days
-    }
-    
-    func checkAverageEmotionIn7Day(entries: [JournalEntry]) -> Int {
-        var numberOfEntriesIn7Days: Int = 0
-        var sumOfEntryEmotionsIn7Day: Int = 0
-        var averageEmotionScore: Int
-        let now = Date()
-        let dateFormatter = DateFormatter()
-        //DATE OF YEAR INT
-        dateFormatter.dateFormat = "DD"
-        let dayString = dateFormatter.string(from: now)
-        let thisDayInt = Int(dayString) ?? 0
+    private func averageMoodDisplay(for entries: [JournalEntry]) -> String {
+        guard !entries.isEmpty else { return "—" }
 
-        for entry in entries {
-            if (entry.loggedTime.dayInYear >= (thisDayInt - 7)) {
-                numberOfEntriesIn7Days += 1
-                sumOfEntryEmotionsIn7Day += entry.moodNumber
-            }
+        let moodTotal = entries.reduce(0) { $0 + $1.moodNumber }
+        let roundedAverage = Int((Double(moodTotal) / Double(entries.count)).rounded())
+        return getEmoji(emojiValue: roundedAverage)
+    }
+
+    private func entriesInCurrentMonth(_ entries: [JournalEntry]) -> [JournalEntry] {
+        let current = Calendar.current.dateComponents([.year, .month], from: Date())
+        guard let currentYear = current.year, let currentMonth = current.month else { return [] }
+
+        return entries.filter {
+            $0.loggedTime.year == currentYear && $0.loggedTime.monthNumber == currentMonth
         }
-        
-        if (numberOfEntriesIn7Days != 0) {
-        averageEmotionScore = Int((sumOfEntryEmotionsIn7Day/numberOfEntriesIn7Days))
-        } else {
-            averageEmotionScore = 1
+    }
+
+    private func entriesInLastSevenCalendarDays(_ entries: [JournalEntry]) -> [JournalEntry] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard
+            let startDate = calendar.date(byAdding: .day, value: -6, to: today),
+            let endDate = calendar.date(byAdding: .day, value: 1, to: today)
+        else {
+            return []
         }
-        return averageEmotionScore
+
+        return entries.filter { entry in
+            guard let entryDate = calendarDate(for: entry) else { return false }
+            return entryDate >= startDate && entryDate < endDate
+        }
+    }
+
+    private func calendarDate(for entry: JournalEntry) -> Date? {
+        Calendar.current.date(from: DateComponents(
+            year: entry.loggedTime.year,
+            month: entry.loggedTime.monthNumber,
+            day: entry.loggedTime.day
+        ))
     }
 
     
